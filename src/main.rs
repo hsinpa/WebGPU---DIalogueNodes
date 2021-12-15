@@ -4,6 +4,10 @@ mod WGPU;
 
 use GPUState::State as State;
 use WGPU::WGPUConstructor::WGPUConstructor as WGPUConstructor;
+use WGPU::WGPUManager::WGPUManager as WGPUManager;
+use WGPU::MaterialManager;
+use WGPU::RenderPipelineManager;
+
 use std::iter;
 
 use winit::{
@@ -19,6 +23,28 @@ fn main() {
 
     // State::new uses async code, so we're going to wait for it to finish
     let mut wgpu_construtor : WGPUConstructor = (WGPUConstructor::new(&window));
+    let mut wgpu_manager : WGPUManager = (WGPUManager::new(wgpu_construtor));
+
+    event_loop.run(move |event, _, control_flow| match event {
+        Event::WindowEvent {
+            ref event,
+            window_id,
+        } if window_id == window.id() => match event {
+            WindowEvent::CloseRequested
+            | WindowEvent::KeyboardInput {
+                input:
+                KeyboardInput {
+                    state: ElementState::Pressed,
+                    virtual_keycode: Some(VirtualKeyCode::Escape),
+                    ..
+                },
+                ..
+            } => *control_flow = ControlFlow::Exit,
+            _ => {}
+        },
+        _ => {}
+    });
+
 
     // let mut state: State = pollster::block_on(State::new(&window));
     //
