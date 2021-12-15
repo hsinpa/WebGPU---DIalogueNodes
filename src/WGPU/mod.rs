@@ -1,4 +1,4 @@
-pub mod WGPUConstructor;
+pub mod WGPUComponent;
 pub mod MaterialManager;
-pub mod RenderPipelineManager;
+pub mod RenderPipelineUtility;
 pub mod WGPUManager;

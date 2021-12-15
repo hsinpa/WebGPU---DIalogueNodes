@@ -1,7 +1,7 @@
 use std::iter;
 use wgpu::{CommandEncoder, Device, PipelineLayout, RenderPipeline, TextureFormat, TextureView};
 use crate::WGPUConstructor;
-use crate::WGPU::RenderPipelineManager;
+use crate::WGPU::RenderPipelineUtility;
 use crate::WGPU::MaterialManager::{Material, MaterialManager};
 
 pub struct WGPUManager {
@@ -18,8 +18,8 @@ impl WGPUManager {
         let material = material_manager.load_shader(&String::from("./assets/shader/shader.wgsl"), &wgpu_constructor.device);
         let commonShader = material.unwrap();
 
-        let pipleline_layout = RenderPipelineManager::create_layout(&wgpu_constructor.device);
-        let render_pipeline =  RenderPipelineManager::create_pipeline(&wgpu_constructor.device, &commonShader.shader_mudule, &pipleline_layout, wgpu_constructor.config.format);
+        let pipleline_layout = RenderPipelineUtility::create_layout(&wgpu_constructor.device);
+        let render_pipeline =  RenderPipelineUtility::create_pipeline(&wgpu_constructor.device, &commonShader.shader_mudule, &pipleline_layout, wgpu_constructor.config.format);
 
         Self {
             wgpu_constructor,

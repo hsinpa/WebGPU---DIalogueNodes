@@ -1,13 +1,15 @@
 mod GPUState;
 mod WGPU;
-
+mod Type;
+mod Utility;
 
 use GPUState::State as State;
-use WGPU::WGPUConstructor::WGPUConstructor as WGPUConstructor;
+use WGPU::WGPUComponent::WGPUConstructor as WGPUConstructor;
 use WGPU::WGPUManager::WGPUManager as WGPUManager;
 use WGPU::MaterialManager;
-use WGPU::RenderPipelineManager;
-
+use WGPU::RenderPipelineUtility;
+use Utility::UtilityFunc;
+use Type::ObjectBufferType::ObjectDataDefineJSON;
 use std::iter;
 
 use winit::{
@@ -25,6 +27,15 @@ fn main() {
     let mut wgpu_construtor : WGPUConstructor = (WGPUConstructor::new(&window));
     let mut wgpu_manager : WGPUManager = (WGPUManager::new(wgpu_construtor));
 
+    let filePath = String::from("./assets/data/objects_data.json");
+    let object_data_json = UtilityFunc::parse_json_file::<ObjectDataDefineJSON>(&filePath);
+
+    match object_data_json {
+        Some(x) => println!("{}", x.objects.len()),
+        None => println!("Nothing is here")
+    }
+
+
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
             ref event,
@@ -38,8 +49,16 @@ fn main() {
                     virtual_keycode: Some(VirtualKeyCode::Escape),
                     ..
                 },
+
                 ..
             } => *control_flow = ControlFlow::Exit,
+            WindowEvent::Resized(physical_size) => {
+                wgpu_manager.resize(*physical_size);
+            }
+            WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
+                // new_inner_size is &&mut so w have to dereference it twice
+                wgpu_manager.resize(**new_inner_size);
+            },
             _ => {}
         },
 
