@@ -30,7 +30,7 @@ use wgpu::{Device, RenderPipeline, ShaderModule, TextureFormat};
                     write_mask: wgpu::ColorWrites::ALL,
                 }],
             }),
-            primitive: create_primitive_type(wgpu::PrimitiveTopology::LineList, wgpu::Face::Back),
+            primitive: create_primitive_type(wgpu::PrimitiveTopology::TriangleList, wgpu::Face::Back),
             depth_stencil: None,
             multisample: wgpu::MultisampleState {
                 count: 1,
