@@ -1,11 +1,15 @@
+use std::borrow::{Borrow, BorrowMut};
+use std::cell::RefCell;
 use std::iter;
-use wgpu::{CommandEncoder, Device, PipelineLayout, RenderPipeline, TextureFormat, TextureView};
-use crate::WGPUConstructor;
+use std::rc::Rc;
+use wgpu::{Buffer, CommandBuffer, CommandEncoder, Device, PipelineLayout, RenderPipeline, SurfaceTexture, TextureFormat, TextureView};
+use crate::{ObjectDataDefineJSON, VertexBufferManager, WGPUConstructor};
+use crate::Type::ObjectBufferType::Vertex;
 use crate::WGPU::RenderPipelineUtility;
 use crate::WGPU::MaterialManager::{Material, MaterialManager};
 
 pub struct WGPUManager {
-    wgpu_constructor: WGPUConstructor,
+    pub wgpu_constructor: WGPUConstructor,
     material_manager: MaterialManager,
 
     default_pipeline_layout: PipelineLayout,
@@ -18,8 +22,18 @@ impl WGPUManager {
         let material = material_manager.load_shader(&String::from("./assets/shader/shader.wgsl"), &wgpu_constructor.device);
         let commonShader = material.unwrap();
 
-        let pipleline_layout = RenderPipelineUtility::create_layout(&wgpu_constructor.device);
-        let render_pipeline =  RenderPipelineUtility::create_pipeline(&wgpu_constructor.device, &commonShader.shader_mudule, &pipleline_layout, wgpu_constructor.config.format);
+        let mut pipleline_layout;
+        let mut render_pipeline;
+        {
+            pipleline_layout = RenderPipelineUtility::create_layout(&wgpu_constructor.device);
+            render_pipeline =  RenderPipelineUtility::create_pipeline(&wgpu_constructor.device,
+                                                                          &commonShader.shader_mudule, &pipleline_layout, wgpu_constructor.config.format,
+                                                                          Vertex::desc());
+        }
+
+        // let mut vertex_buffers = VertexBufferManager::new(&unwrap_wgpu_cont.device);
+        // vertex_buffers.insert_json_data(&object_data_json.unwrap());
+
 
         Self {
             wgpu_constructor,
@@ -33,22 +47,30 @@ impl WGPUManager {
         self.wgpu_constructor.resize(new_size);
     }
 
-    pub fn render(&mut self) -> Result<(), wgpu::SurfaceError>{
+    pub fn render(&mut self, vertex_manager: &VertexBufferManager) -> Result<(), wgpu::SurfaceError>{
         let output = self.wgpu_constructor.surface.get_current_texture()?;
 
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
+        let mut command_buffers: Vec<CommandBuffer> = Vec::new();
+        let vertex_buffers = vertex_manager.get_all_vertex_buffer();
 
-        let encoder = self.create_encoder_buffer(&view);
+        for x in vertex_buffers {
+            let vb_value = x.borrow();
+            let command_buffer =self.create_encoder_buffer(&view,
+                                                           vb_value.number_of_vertices,
+                                                           &vb_value.buffer_data).finish();
+            command_buffers.push(command_buffer);
+        }
 
-        self.wgpu_constructor.queue.submit(iter::once(encoder.finish()));
+        self.wgpu_constructor.queue.submit(command_buffers);
         output.present();
 
         Ok(())
     }
 
-    pub fn create_encoder_buffer(&mut self, view : &TextureView) -> CommandEncoder {
+    pub fn create_encoder_buffer(&mut self, view : &TextureView, vertetice_number : u32, vertex_buffer : &Buffer) -> CommandEncoder {
         let mut encoder = self.wgpu_constructor.device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
@@ -74,7 +96,9 @@ impl WGPUManager {
             });
 
             render_pass.set_pipeline(&self.default_render_pipeline); // 2.
-            render_pass.draw(0..3, 0..1); // 3.
+            render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            render_pass.draw(0..vertetice_number, 0..1);
+
         }
 
         return encoder;

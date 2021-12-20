@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::rc::Rc;
-use wgpu::Device;
+use wgpu::{Device, ShaderModule, TextureFormat};
 
 #[derive(Debug)]
 pub struct  MaterialManager {

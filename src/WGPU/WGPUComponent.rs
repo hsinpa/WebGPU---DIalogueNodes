@@ -1,5 +1,6 @@
 use std::future::Future;
 use std::iter;
+use std::rc::Rc;
 use wgpu::{Adapter, Device, Instance, Queue, Surface};
 
 use winit::{
@@ -11,7 +12,7 @@ use winit::dpi::PhysicalSize;
 
 pub struct WGPUConstructor {
     pub surface: wgpu::Surface,
-    pub device: wgpu::Device,
+    pub device: Rc<wgpu::Device>,
     pub queue: wgpu::Queue,
     pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
@@ -31,7 +32,7 @@ impl WGPUConstructor {
 
         return Self {
             surface: surface,
-            device: device,
+            device: Rc::new(device),
             queue: queue,
             config: surface_config,
             size: size,
